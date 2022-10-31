@@ -11,10 +11,12 @@ headers = {
     "USer-Agent": "Chrome/107.0.5304.68"
 }
 websites = {
-    "Digitec" : ["https://www.digitec.ch/en/s1/product/xiaomi-mi-selfie-stick-tripod-mobile-phone-accessories-9868799"],
+    "Digitec" : [
+        "https://www.digitec.ch/en/s1/product/xiaomi-mi-selfie-stick-tripod-mobile-phone-accessories-9868799"
+        ],
     "Amazon": [
         "https://www.amazon.es/Profesional-Tupwoon-Resistente-Desmontable-Compatible/dp/B0B6BF9HT5",
-        #"https://www.amazon.es/Tr%C3%ADpode-Extensible-Inal%C3%A1mbrico-Control-Compatible/dp/B09KG9SMBV/"
+        "https://www.amazon.es/Tr%C3%ADpode-Extensible-Inal%C3%A1mbrico-Control-Compatible/dp/B09KG9SMBV/"
         ]
 }
 
@@ -38,7 +40,7 @@ class DigitecParser:
             response = requests.get(l, headers)
             soup = BeautifulSoup(response.content, 'html.parser')
             #print(f"Product: {self.get_product(soup)}\nPrice: {self.get_price(soup)}")
-            webhook.send(f"Digitec:\n\t\t- Product: {self.get_product(soup)}\n\t\t- Price: {self.get_price(soup)}")
+            webhook.send(f"Digitec:\n\t\t{self.get_product(soup)}\n\t\t - Link: {l}\n\t\t- Price: {self.get_price(soup)}")
 
 
         
@@ -54,22 +56,19 @@ class AmazonParser:
 
 
     def get_price(self, soup) -> float:
-        try:
-            return float(soup.find(id='priceblock_ourprice').get_text().replace('.', '').replace('€', '').replace(',', '.').strip())
-        except:
-            return ''
+        return float(soup.find(id='corePriceDisplay_desktop_feature_div').select('.a-offscreen')[0].get_text().replace('€', '').replace(',', '.'))
 
             
     def show_offers(self):
         for l in self.links:
             response = requests.get(l, headers)
             soup = BeautifulSoup(response.content, 'html.parser')
-            print(f"Amazon:\n\t\t- Product: {self.get_product(soup)}\n\t\t- Price: {self.get_price(soup)}")
-            #webhook.send(f"Digitec:\n\t\t- Product: {self.get_product(soup)}\n\t\t- Price: {self.get_price(soup)}")
+            #print(f"Amazon:\n\t\t{self.get_product(soup)}\n\t\t- Link: {l}\n\t\t- Price: {self.get_price(soup)}")
+            webhook.send(f"Amazon:\n\t\t{self.get_product(soup)}\n\t\t- Link: {l}\n\t\t- Price: {self.get_price(soup)}")
 
 if __name__ == '__main__':
-    #digitec = DigitecParser(websites['Digitec'])
-    #digitec.show_offers()
+    digitec = DigitecParser(websites['Digitec'])
+    digitec.show_offers()
 
     amazon = AmazonParser(websites["Amazon"])
     amazon.show_offers()
