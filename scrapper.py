@@ -68,7 +68,15 @@ class AmazonParser:
 
 if __name__ == '__main__':
     digitec = DigitecParser(websites['Digitec'])
-    digitec.show_offers()
-
+    try:
+        digitec.show_offers()
+    except AttributeError:
+        print("Try again")
+        digitec.show_offers()
+    
     amazon = AmazonParser(websites["Amazon"])
-    amazon.show_offers()
+    try:
+        amazon.show_offers()
+    except AttributeError:
+        print("Try again")
+        amazon.show_offers()
