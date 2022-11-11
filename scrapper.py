@@ -1,9 +1,6 @@
-import re
-import requests
-
-from bs4 import BeautifulSoup
 from discord import SyncWebhook
-from typing import List, Union
+
+from parsers import AmazonParser, DigitecParser
 
 webhook = SyncWebhook.from_url(
     "https://discord.com/api/"
@@ -23,65 +20,16 @@ websites = {
     ]
 }
 
-
-class DigitecParser:
-    def __init__(self, links: List[str]):
-        self.links = links
-
-    def get_product(self, soup) -> str:
-        return soup.h1.strong.get_text() + soup.h1.span.get_text()
-
-    def parse_price(self, raw_price: str) -> Union[float, None]:
-        return float(price_pattern_digits.group(0)) if (price_pattern_digits := re.search(r"\d+\.\d+", raw_price)) else \
-            float(price_pattern_w_chars.group(0).split(".")[0]) if (
-                price_pattern_w_chars := re.search(r"\d+\..", raw_price)) else None
-
-    def get_price(self, soup) -> float:
-        return self.parse_price(soup.find_all('strong')[0].get_text())
-
-    def show_offers(self):
-        for l in self.links:
-            response = requests.get(l, headers)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            # print(f"Product: {self.get_product(soup)}\nPrice: {self.get_price(soup)}")
-            webhook.send(
-                f"Digitec:\n\t\t{self.get_product(soup)}\n\t\t - Link: {l}\n\t\t- Price: {self.get_price(soup)}")
-
-
-class AmazonParser:
-    def __init__(self, links: List[str]):
-        self.links = links
-
-    def get_product(self, soup) -> str:
-        return soup.find(id="productTitle").get_text().strip()
-
-    def parse_price(self, raw_price: str) -> Union[float, None]:
-        return float(raw_price)
-
-    def get_price(self, soup) -> float:
-        return float(
-            soup.find(id='corePriceDisplay_desktop_feature_div').select('.a-offscreen')[0]
-            .get_text().replace('€', '').replace(',', '.'))
-
-    def show_offers(self):
-        for l in self.links:
-            response = requests.get(l, headers)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            # print(f"Amazon:\n\t\t{self.get_product(soup)}\n\t\t- Link: {l}\n\t\t- Price: {self.get_price(soup)}")
-            webhook.send(f"Amazon:\n\t\t{self.get_product(soup)}\n\t\t- Link: {l}\n\t\t- Price: {self.get_price(soup)}")
-
-
 if __name__ == '__main__':
-    digitec = DigitecParser(websites['Digitec'])
-    try:
-        digitec.show_offers()
-    except AttributeError:
-        print("Try again")
-        digitec.show_offers()
+    parsers = [DigitecParser(websites['Digitec']), AmazonParser(websites["Amazon"])]
+    for p in parsers:
+        for offer in p.get_offers():
+            if offer.price is None:
+                print(f"Failed request to {p.__str__()[:-6]} try to fetch the link: {offer.link}")
+                webhook.send(f"Failed request to {p.__str__()[:-6]} try to fetch the link: {offer.link}")
+            else:
+                print(f"{p.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}"
+                      f"\n\t\t- Price: {offer.price}")
+                webhook.send(f"{p.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}"
+                             f"\n\t\t- Price: {offer.price}")
 
-    amazon = AmazonParser(websites["Amazon"])
-    try:
-        amazon.show_offers()
-    except AttributeError:
-        print("Try again")
-        amazon.show_offers()

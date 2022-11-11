@@ -28,17 +28,23 @@ class Parser(ABC):
 
     def get_offers(self) -> list[Offer]:
         offers = []
-        for l in self.links:
-            response = requests.get(l, headers=HEADERS)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            if price := self.get_price(soup):
-                offers.append(Offer(link=l, product=self.get_product(soup), price=price))
+        for link in self.links:
+            try:
+                response = requests.get(link, headers=HEADERS)
+                soup = BeautifulSoup(response.content, features='lxml')
+                if price := self.get_price(soup):
+                    offers.append(Offer(link=link, product=self.get_product(soup), price=price))
+            except AttributeError:
+                offers.append(Offer(link=link, product=None, price=None))
         return offers
+
+    def __str__(self):
+        return self.__class__.__name__
 
 
 class DigitecParser(Parser):
     def get_product(self, soup: BeautifulSoup) -> str:
-        pass
+        return soup.h1.strong.get_text() + soup.h1.span.get_text()
 
     @staticmethod
     def parse_price(raw_price: str) -> Union[float, None]:
@@ -48,3 +54,12 @@ class DigitecParser(Parser):
 
     def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
         return self.parse_price(soup.find_all('strong')[0].get_text())
+
+
+class AmazonParser(Parser):
+    def get_product(self, soup: BeautifulSoup) -> str:
+        return soup.find(id="productTitle").get_text().strip()
+
+    def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
+        return float(soup.find(id='corePriceDisplay_desktop_feature_div')
+                     .select('.a-offscreen')[0].get_text().replace('€', '').replace(',', '.'))
