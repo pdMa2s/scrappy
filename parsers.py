@@ -27,16 +27,14 @@ class Parser(ABC):
         pass
 
     def get_offers(self) -> list[Offer]:
-        offers = []
         for link in self.links:
             try:
                 response = requests.get(link, headers=HEADERS)
                 soup = BeautifulSoup(response.content, features='lxml')
                 if price := self.get_price(soup):
-                    offers.append(Offer(link=link, product=self.get_product(soup), price=price))
+                    yield Offer(link=link, product=self.get_product(soup), price=price)
             except AttributeError:
-                offers.append(Offer(link=link, product=None, price=None))
-        return offers
+                yield Offer(link=link, product=None, price=None)
 
     def __str__(self):
         return self.__class__.__name__
