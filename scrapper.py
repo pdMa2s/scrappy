@@ -1,6 +1,6 @@
 from discord import SyncWebhook
 
-from parsers import AmazonParser, DigitecParser
+from parsers import AmazonParser, DigitecParser, OttosParser
 
 webhook = SyncWebhook.from_url(
     "https://discord.com/api/"
@@ -17,11 +17,14 @@ websites = {
     "Amazon": [
         "https://www.amazon.es/Profesional-Tupwoon-Resistente-Desmontable-Compatible/dp/B0B6BF9HT5",
         "https://www.amazon.es/Tr%C3%ADpode-Extensible-Inal%C3%A1mbrico-Control-Compatible/dp/B09KG9SMBV/"
+    ],
+    "Ottos": [
+        "https://www.ottos.ch/de/electrolux-beutelloser-staubsauger-ease-c4-ec412sw-235108.html"
     ]
 }
 
 if __name__ == '__main__':
-    parsers = [DigitecParser(websites['Digitec']), AmazonParser(websites["Amazon"])]
+    parsers = [DigitecParser(websites['Digitec']), AmazonParser(websites["Amazon"]), OttosParser(websites['Ottos'])]
     for p in parsers:
         for offer in p.get_offers():
             if offer.price is None:

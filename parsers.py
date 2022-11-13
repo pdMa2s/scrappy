@@ -63,3 +63,11 @@ class AmazonParser(Parser):
     def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
         return float(soup.find(id='corePriceDisplay_desktop_feature_div')
                      .select('.a-offscreen')[0].get_text().replace('€', '').replace(',', '.'))
+
+
+class OttosParser(Parser):
+    def get_product(self, soup: BeautifulSoup) -> str:
+        return soup.find("span", attrs={"data-ui-id": "page-title-wrapper"}).get_text()
+
+    def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
+        return soup.find("span", attrs={"class": "price-wrapper"}).next_element.get_text().replace("CHF", "").strip()
