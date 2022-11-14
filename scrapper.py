@@ -49,16 +49,17 @@ if __name__ == '__main__':
     for p in parsers:
         for o in p.get_offers():
             last_price = history.get_price(o.link)
-            if o.price and last_price and last_price < o.price:
-                msg = get_price_reduction_msg(p, o)
-            elif o.price and last_price and last_price > o.price:
-                msg = get_price_increase_msg(p, o)
-            elif o.price:
-                msg = get_price_msg(p, o)
+            if o.price:
+                if last_price and last_price < o.price:
+                    msg = get_price_reduction_msg(p, o)
+                elif last_price and last_price > o.price:
+                    msg = get_price_increase_msg(p, o)
+                else:
+                    msg = get_price_msg(p, o)
+                history.store_price(o.link, o.price)
             else:
                 msg = get_failed_request_msg(p, o)
 
             print(msg)
             webhook.send(msg)
-            history.store_price(o.link, o.price)
     history.commit()
