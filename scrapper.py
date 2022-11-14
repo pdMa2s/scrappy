@@ -1,11 +1,12 @@
 from discord import SyncWebhook
 
 import history
-from parsers import AmazonParser, DigitecParser, OttosParser
+from offer import Offer
+from parsers import AmazonParser, DigitecParser, OttosParser, Parser
 
 webhook = SyncWebhook.from_url(
-    "https://discord.com/api/webhooks/1041461946429472818/"
-    "uOWyh5rcYqZwcxbcY3cIUxsZwIyJMWfU63-lN8AomJKRIXK_Yg6VTdW17uzxOr1XD64-"
+    "https://discord.com/api/webhooks/1041809526220927007/"
+    "l2kSrqXnI1CP17I8DEA_s52H1Dwr_OZnP2JIZzk7dHk3BOPqdISW-GxhyY3Op0sBU97C"
 )
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -24,24 +25,40 @@ websites = {
     ]
 }
 
+
+def get_failed_request_msg(parser: Parser, offer: Offer) -> str:
+    return f"Failed request to {parser.__str__()[:-6]} try to fetch the link: {offer.link}"
+
+
+def get_price_reduction_msg(parser: Parser, offer: Offer) -> str:
+    return f"{parser.__str__()[:-6]}:  ----- Price reduction!!! ----\n\t\t{offer.product}" \
+           f"\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}"
+
+
+def get_price_increase_msg(parser: Parser, offer: Offer) -> str:
+    return f"{parser.__str__()[:-6]}:  ----- Price increase!!! ----\n\t\t{offer.product}" \
+           f"\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}"
+
+
+def get_price_msg(parser: Parser, offer: Offer) -> str:
+    return f"{parser.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {o.link}\n\t\t- Price: {o.price}"
+
+
 if __name__ == '__main__':
     parsers = [DigitecParser(websites['Digitec']), AmazonParser(websites["Amazon"]), OttosParser(websites['Ottos'])]
     for p in parsers:
-        for offer in p.get_offers():
-            if not offer.price:
-                print(f"Failed request to {p.__str__()[:-6]} try to fetch the link: {offer.link}")
-                webhook.send(f"Failed request to {p.__str__()[:-6]} try to fetch the link: {offer.link}")
+        for o in p.get_offers():
+            last_price = history.get_price(o.link)
+            if o.price and last_price and last_price < o.price:
+                msg = get_price_reduction_msg(p, o)
+            elif o.price and last_price and last_price > o.price:
+                msg = get_price_increase_msg(p, o)
+            elif o.price:
+                msg = get_price_msg(p, o)
             else:
-                last_price = history.get_price(offer.link)
-                if last_price and last_price < offer.price:
-                    print(f"{p.__str__()[:-6]}:  ----- Price reduction!!! ----\n\t\t{offer.product}"
-                          f"\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}")
-                    webhook.send(f"{p.__str__()[:-6]}:  ----- Price reduction!!! ----\n\t\t{offer.product}"
-                                 f"\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}")
-                elif not last_price:
-                    print(f"{p.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}"
-                          f"\n\t\t- Price: {offer.price}")
-                    webhook.send(f"{p.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}"
-                                f"\n\t\t- Price: {offer.price}")
-                history.store_price(offer.link, offer.price)
+                msg = get_failed_request_msg(p, o)
+
+            print(msg)
+            webhook.send(msg)
+            history.store_price(o.link, o.price)
     history.commit()
