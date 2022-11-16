@@ -12,11 +12,11 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML
 
 
 class Parser(ABC):
-    links: list[str]
+    urls: list[str]
     offers: list[Offer]
 
-    def __init__(self, links: List[str]):
-        self.links = links
+    def __init__(self, urls: List[str]):
+        self.urls = urls
 
     @abstractmethod
     def get_product(self, soup: BeautifulSoup) -> str:
@@ -26,21 +26,29 @@ class Parser(ABC):
     def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
         pass
 
+    @abstractmethod
+    def can_process_url(self, url: str) -> bool:
+        pass
+
     def get_offers(self) -> list[Offer]:
-        for link in self.links:
+        for url in self.urls:
+            assert self.can_process_url(url), f"{self.__str__()} can't process {url}"
             try:
-                response = requests.get(link, headers=HEADERS)
+                response = requests.get(url, headers=HEADERS)
                 soup = BeautifulSoup(response.content, features='lxml')
                 if price := self.get_price(soup):
-                    yield Offer(link=link, product=self.get_product(soup), price=price)
+                    yield Offer(link=url, product=self.get_product(soup), price=price)
             except AttributeError:
-                yield Offer(link=link, product=None, price=None)
+                yield Offer(link=url, product=None, price=None)
 
     def __str__(self):
         return self.__class__.__name__
 
 
 class DigitecParser(Parser):
+    def can_process_url(self, url: str) -> bool:
+        return re.search(r"https?://www\.digitec.+", url) is not None
+
     def get_product(self, soup: BeautifulSoup) -> str:
         return soup.h1.strong.get_text() + soup.h1.span.get_text()
 
@@ -55,6 +63,9 @@ class DigitecParser(Parser):
 
 
 class AmazonParser(Parser):
+    def can_process_url(self, url: str) -> bool:
+        return re.search(r"https?://www\.amazon.+", url) is not None
+
     def get_product(self, soup: BeautifulSoup) -> str:
         return soup.find(id="productTitle").get_text().strip()
 
@@ -64,6 +75,9 @@ class AmazonParser(Parser):
 
 
 class OttosParser(Parser):
+    def can_process_url(self, url: str) -> bool:
+        return re.search(r"https?://www\.ottos.+", url) is not None
+
     def get_product(self, soup: BeautifulSoup) -> str:
         return soup.find("span", attrs={"data-ui-id": "page-title-wrapper"}).get_text()
 
