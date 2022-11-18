@@ -45,6 +45,13 @@ class Parser(ABC):
         return self.__class__.__name__
 
 
+class ParserHandler:
+    parsers: list[Parser]
+
+    def __init__(self, parsers):
+        self.parsers = parsers
+
+
 class DigitecParser(Parser):
     def can_process_url(self, url: str) -> bool:
         return re.search(r"https?://www\.digitec.+", url) is not None
