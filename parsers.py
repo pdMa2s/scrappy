@@ -12,12 +12,6 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML
 
 
 class Parser(ABC):
-    urls: list[str]
-    offers: list[Offer]
-
-    def __init__(self, urls: List[str]):
-        self.urls = urls
-
     @abstractmethod
     def get_product(self, soup: BeautifulSoup) -> str:
         pass
@@ -30,16 +24,15 @@ class Parser(ABC):
     def can_process_url(self, url: str) -> bool:
         pass
 
-    def get_offers(self) -> list[Offer]:
-        for url in self.urls:
-            assert self.can_process_url(url), f"{self.__str__()} can't process {url}"
-            try:
-                response = requests.get(url, headers=HEADERS)
-                soup = BeautifulSoup(response.content, features='lxml')
-                if price := self.get_price(soup):
-                    yield Offer(link=url, product=self.get_product(soup), price=price)
-            except AttributeError:
-                yield Offer(link=url, product=None, price=None)
+    def get_offer(self, url) -> Offer:
+        assert self.can_process_url(url), f"{self.__str__()} can't process {url}"
+        try:
+            response = requests.get(url, headers=HEADERS)
+            soup = BeautifulSoup(response.content, features='lxml')
+            if price := self.get_price(soup):
+                return Offer(link=url, product=self.get_product(soup), price=price)
+        except AttributeError:
+            return Offer(link=url, product=None, price=None)
 
     def __str__(self):
         return self.__class__.__name__
@@ -50,6 +43,14 @@ class ParserHandler:
 
     def __init__(self, parsers):
         self.parsers = parsers
+
+    def parse_urls(self, urls: list[str]):
+        for url in urls:
+            for parser in self.parsers:
+                if parser.can_process_url(url):
+                    yield parser.get_offer(url)
+            else:
+                raise AttributeError(f"No parser for {url}")  # TODO: think of a better solution for this
 
 
 class DigitecParser(Parser):

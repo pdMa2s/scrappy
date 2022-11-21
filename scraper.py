@@ -1,8 +1,19 @@
+import argparse
+import json
 from discord import SyncWebhook
 
 import history
 from offer import Offer
 from parsers import AmazonParser, DigitecParser, OttosParser, Parser
+
+arg_parser = argparse.ArgumentParser(
+    prog='Scrapy',
+    description='Scrapes the provided urls for products and price quotes.',
+    epilog='Text at the bottom of help')
+
+arg_parser.add_argument('urls', required=False)
+arg_parser.add_argument('-us', '--urls-list',  nargs='*')
+arg_parser.add_argument('-um', '--urls-map',  nargs='?')
 
 webhook = SyncWebhook.from_url(
     "https://discord.com/api/webhooks/1041809526220927007/"
@@ -45,9 +56,9 @@ def get_price_msg(parser: Parser, offer: Offer) -> str:
 
 
 if __name__ == '__main__':
-    parsers = [DigitecParser(websites['Digitec']), AmazonParser(websites["Amazon"]), OttosParser(websites['Ottos'])]
+    parsers = [DigitecParser(), AmazonParser(), OttosParser()]
     for p in parsers:
-        for o in p.get_offers():
+        for o in p.get_offer():
             last_price = history.get_price(o.link)
             if o.price:
                 if last_price and last_price < o.price:
