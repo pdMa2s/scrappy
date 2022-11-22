@@ -6,14 +6,21 @@ import history
 from offer import Offer
 from parsers import AmazonParser, DigitecParser, OttosParser, Parser
 
-arg_parser = argparse.ArgumentParser(
-    prog='Scrapy',
-    description='Scrapes the provided urls for products and price quotes.',
-    epilog='Text at the bottom of help')
 
-arg_parser.add_argument('urls', required=False)
-arg_parser.add_argument('-us', '--urls-list',  nargs='*')
-arg_parser.add_argument('-um', '--urls-map',  nargs='?')
+def parse_args():
+    arg_parser = argparse.ArgumentParser(
+        prog='Scrapy',
+        description='Scrapes the provided urls for products and price quotes.',
+        epilog='Text at the bottom of help'
+    )
+
+    cmd_line_group = arg_parser.add_argument_group('Command line group')
+    cmd_line_group.add_argument('urls', action='append')
+    cmd_line_group.add_argument('-p', '--parser', required=False, type=str)
+
+    file_group = arg_parser.add_argument_group('File group')
+    file_group.add_argument('-um', '--urls-map', type=argparse.FileType('r'))
+
 
 webhook = SyncWebhook.from_url(
     "https://discord.com/api/webhooks/1041809526220927007/"
