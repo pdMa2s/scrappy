@@ -1,25 +1,36 @@
 import argparse
 import json
+from argparse import Action
 from discord import SyncWebhook
+from typing import Union
 
 import history
 from offer import Offer
 from parsers import AmazonParser, DigitecParser, OttosParser, Parser
 
 
-def parse_args():
+def parse_args() -> Union[list, dict]:
+    class JsonArgumentLoaderAction(Action):
+        def __call__(self, *args, **kwargs):
+            with open(args[2], 'r') as url_file:
+                values = json.load(url_file)
+                setattr(args[1], self.dest, values)
+
     arg_parser = argparse.ArgumentParser(
         prog='Scrapy',
         description='Scrapes the provided urls for products and price quotes.',
         epilog='Text at the bottom of help'
     )
 
-    cmd_line_group = arg_parser.add_argument_group('Command line group')
-    cmd_line_group.add_argument('urls', action='append')
-    cmd_line_group.add_argument('-p', '--parser', required=False, type=str)
+    exclusive_group = arg_parser.add_mutually_exclusive_group()
+    exclusive_group.add_argument('-u', '--urls', action='extend', nargs='+')
+    exclusive_group.add_argument('-uf', '--url-file', action=JsonArgumentLoaderAction)
+    arg_parser.add_argument('-p', '--parser', required=False, type=str)
 
-    file_group = arg_parser.add_argument_group('File group')
-    file_group.add_argument('-um', '--urls-map', type=argparse.FileType('r'))
+    parsed_args = arg_parser.parse_args()
+
+    assert parsed_args.urls or parsed_args.urls_file
+    return parsed_args.urls if parsed_args.urls else parsed_args.urls_file
 
 
 webhook = SyncWebhook.from_url(
@@ -30,18 +41,6 @@ webhook = SyncWebhook.from_url(
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
                          'Chrome/41.0.2228.0 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'
            }
-websites = {
-    "Digitec": [
-        "https://www.digitec.ch/en/s1/product/xiaomi-mi-selfie-stick-tripod-mobile-phone-accessories-9868799"
-    ],
-    "Amazon": [
-        "https://www.amazon.es/Profesional-Tupwoon-Resistente-Desmontable-Compatible/dp/B0B6BF9HT5",
-        "https://www.amazon.es/Tr%C3%ADpode-Extensible-Inal%C3%A1mbrico-Control-Compatible/dp/B09KG9SMBV/"
-    ],
-    "Ottos": [
-        "https://www.ottos.ch/de/electrolux-beutelloser-staubsauger-ease-c4-ec412sw-235108.html"
-    ]
-}
 
 
 def get_failed_request_msg(parser: Parser, offer: Offer) -> str:
@@ -63,6 +62,7 @@ def get_price_msg(parser: Parser, offer: Offer) -> str:
 
 
 if __name__ == '__main__':
+    a = parse_args()
     parsers = [DigitecParser(), AmazonParser(), OttosParser()]
     for p in parsers:
         for o in p.get_offer():
