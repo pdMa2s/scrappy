@@ -53,6 +53,19 @@ class ParserHandler:
                 raise AttributeError(f"No parser for {url}")  # TODO: think of a better solution for this
 
 
+class ParserFactory:
+    @staticmethod
+    def get_parser(parser_id: str) -> Parser:
+        if parser_id == 'Amazon':
+            return AmazonParser()
+        elif parser_id == 'Digitec':
+            return DigitecParser()
+        elif parser_id == 'Ottos':
+            return OttosParser()
+        else:
+            raise AttributeError("Invalid parser")
+
+
 class DigitecParser(Parser):
     def can_process_url(self, url: str) -> bool:
         return re.search(r"https?://www\.digitec.+", url) is not None

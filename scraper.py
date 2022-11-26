@@ -1,15 +1,15 @@
 import argparse
 import json
-from argparse import Action
+from argparse import Action, Namespace
 from discord import SyncWebhook
 from typing import Union
 
 import history
 from offer import Offer
-from parsers import AmazonParser, DigitecParser, OttosParser, Parser
+from parsers import AmazonParser, DigitecParser, OttosParser, Parser, ParserFactory
 
 
-def parse_args() -> Union[list, dict]:
+def parse_args() -> Namespace:
     class JsonArgumentLoaderAction(Action):
         def __call__(self, *args, **kwargs):
             with open(args[2], 'r') as url_file:
@@ -24,13 +24,13 @@ def parse_args() -> Union[list, dict]:
 
     exclusive_group = arg_parser.add_mutually_exclusive_group()
     exclusive_group.add_argument('-u', '--urls', action='extend', nargs='+')
-    exclusive_group.add_argument('-uf', '--url-file', action=JsonArgumentLoaderAction)
+    exclusive_group.add_argument('-uf', '--urls-file', action=JsonArgumentLoaderAction)
     arg_parser.add_argument('-p', '--parser', required=False, type=str)
 
     parsed_args = arg_parser.parse_args()
 
     assert parsed_args.urls or parsed_args.urls_file
-    return parsed_args.urls if parsed_args.urls else parsed_args.urls_file
+    return parsed_args
 
 
 webhook = SyncWebhook.from_url(
@@ -58,26 +58,32 @@ def get_price_increase_msg(parser: Parser, offer: Offer) -> str:
 
 
 def get_price_msg(parser: Parser, offer: Offer) -> str:
-    return f"{parser.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {o.link}\n\t\t- Price: {o.price}"
+    return f"{parser.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}"
 
 
 if __name__ == '__main__':
-    a = parse_args()
+    user_args = parse_args()
     parsers = [DigitecParser(), AmazonParser(), OttosParser()]
-    for p in parsers:
-        for o in p.get_offer():
-            last_price = history.get_price(o.link)
-            if o.price:
-                if last_price and last_price < o.price:
-                    msg = get_price_reduction_msg(p, o)
-                elif last_price and last_price > o.price:
-                    msg = get_price_increase_msg(p, o)
-                else:
-                    msg = get_price_msg(p, o)
-                history.store_price(o.link, o.price)
-            else:
-                msg = get_failed_request_msg(p, o)
 
-            print(msg)
-            webhook.send(msg)
-    history.commit()
+    if user_args.urls_file:
+        parser_links = user_args.urls_file
+        for parser_name in parser_links:
+            parser = ParserFactory.get_parser(parser_name)
+            for url in parser_links[parser_name]:
+                assert parser.can_process_url(url)
+
+                if offer := parser.get_offer(url):
+                    last_price = history.get_price(url)
+                    if last_price and last_price < offer.price:
+                        msg = get_price_reduction_msg(parser, offer)
+                    elif last_price and last_price > offer.price:
+                        msg = get_price_increase_msg(parser, offer)
+                    else:
+                        msg = get_price_msg(parser, offer)
+                    history.store_price(offer.link, offer.price)
+                else:
+                    msg = get_failed_request_msg(parser, offer)
+
+                print(msg)
+                webhook.send(msg)
+        history.commit()
