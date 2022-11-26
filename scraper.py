@@ -6,7 +6,7 @@ from typing import Union
 
 import history
 from offer import Offer
-from parsers import AmazonParser, DigitecParser, OttosParser, Parser, ParserFactory
+from parsers import AmazonParser, DigitecParser, OttosParser, Parser, ParserFactory, ParserHandler
 
 
 def parse_args() -> Namespace:
@@ -61,29 +61,41 @@ def get_price_msg(parser: Parser, offer: Offer) -> str:
     return f"{parser.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}"
 
 
+def handle_offer(parser: Parser, offer: Offer) -> str:
+    history.store_price(offer.link, offer.price)
+    if offer:
+        last_price = history.get_price(url)
+        if last_price and offer.price > last_price:
+            return get_price_increase_msg(parser, offer)
+        elif last_price and offer.price < last_price:
+            return get_price_reduction_msg(parser, offer)
+        else:
+            return get_price_msg(parser, offer)
+    else:
+        return get_failed_request_msg(parser, offer)
+
+
 if __name__ == '__main__':
     user_args = parse_args()
-    parsers = [DigitecParser(), AmazonParser(), OttosParser()]
+    parser_instances = [DigitecParser(), AmazonParser(), OttosParser()]
 
-    if user_args.urls_file:
-        parser_links = user_args.urls_file
-        for parser_name in parser_links:
+    if parser_urls := user_args.urls_file:
+        for parser_name in parser_urls:
             parser = ParserFactory.get_parser(parser_name)
-            for url in parser_links[parser_name]:
+            for url in parser_urls[parser_name]:
                 assert parser.can_process_url(url)
-
-                if offer := parser.get_offer(url):
-                    last_price = history.get_price(url)
-                    if last_price and last_price < offer.price:
-                        msg = get_price_reduction_msg(parser, offer)
-                    elif last_price and last_price > offer.price:
-                        msg = get_price_increase_msg(parser, offer)
-                    else:
-                        msg = get_price_msg(parser, offer)
-                    history.store_price(offer.link, offer.price)
-                else:
-                    msg = get_failed_request_msg(parser, offer)
+                msg = handle_offer(parser, parser.get_offer(url))
 
                 print(msg)
-                webhook.send(msg)
-        history.commit()
+                # webhook.send(msg)
+
+    elif not user_args.parser:
+        parser_handler = ParserHandler(parser_instances)
+        for url in user_args.urls:
+            parser = parser_handler.get_parser(url)
+            msg = handle_offer(parser, parser.get_offer(url))
+
+            print(msg)
+            # webhook.send(msg)
+
+    history.commit()

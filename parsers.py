@@ -28,10 +28,13 @@ class Parser(ABC):
         assert self.can_process_url(url), f"{self.__str__()} can't process {url}"
         try:
             response = requests.get(url, headers=HEADERS)
+            if response.status_code not in (200, 201):
+                return Offer(link=url, product=None, price=None)
+
             soup = BeautifulSoup(response.content, features='lxml')
-            if price := self.get_price(soup):
-                return Offer(link=url, product=self.get_product(soup), price=price)
-        except AttributeError:
+            price = self.get_price(soup)
+            return Offer(link=url, product=self.get_product(soup), price=price)
+        except AttributeError or AssertionError:
             return Offer(link=url, product=None, price=None)
 
     def __str__(self):
@@ -44,13 +47,11 @@ class ParserHandler:
     def __init__(self, parsers):
         self.parsers = parsers
 
-    def parse_urls(self, urls: list[str]):
-        for url in urls:
-            for parser in self.parsers:
-                if parser.can_process_url(url):
-                    yield parser.get_offer(url)
-            else:
-                raise AttributeError(f"No parser for {url}")  # TODO: think of a better solution for this
+    def get_parser(self, url: str):
+        for parser in self.parsers:
+            if parser.can_process_url(url):
+                return parser
+        raise AttributeError(f"No parser for {url}")  # TODO: think of a better solution for this
 
 
 class ParserFactory:
