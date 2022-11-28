@@ -80,7 +80,7 @@ def handle_offer(urls: list[str], parser: Union[Parser, None] = None, parser_fac
             msg = get_failed_request_msg(parser, offer)
 
         print(msg)
-        # webhook.send(msg)
+        webhook.send(msg)
 
 
 if __name__ == '__main__':
