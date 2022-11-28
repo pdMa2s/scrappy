@@ -6,7 +6,7 @@ from typing import Union
 
 import history
 from offer import Offer
-from parsers import AmazonParser, DigitecParser, OttosParser, Parser, ParserFactory, ParserHandler
+from parsers import AmazonParser, DigitecParser, OttosParser, Parser, ParserFactory
 
 
 def parse_args() -> Namespace:
@@ -61,41 +61,40 @@ def get_price_msg(parser: Parser, offer: Offer) -> str:
     return f"{parser.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}"
 
 
-def handle_offer(parser: Parser, offer: Offer) -> str:
-    history.store_price(offer.link, offer.price)
-    if offer:
-        last_price = history.get_price(url)
-        if last_price and offer.price > last_price:
-            return get_price_increase_msg(parser, offer)
-        elif last_price and offer.price < last_price:
-            return get_price_reduction_msg(parser, offer)
+def handle_offer(urls: list[str], parser: Union[Parser, None] = None, parser_factory: Union[ParserFactory, None] = None):
+    for url in urls:
+        parser = parser_factory.get_parser_with_url(url) if parser_factory else parser
+        assert parser.can_process_url(url)
+
+        offer = parser.get_offer(url)
+        history.store_price(offer.link, offer.price)
+        if offer:
+            last_price = history.get_price(url)
+            if last_price and offer.price > last_price:
+                msg = get_price_increase_msg(parser, offer)
+            elif last_price and offer.price < last_price:
+                msg = get_price_reduction_msg(parser, offer)
+            else:
+                msg = get_price_msg(parser, offer)
         else:
-            return get_price_msg(parser, offer)
-    else:
-        return get_failed_request_msg(parser, offer)
+            msg = get_failed_request_msg(parser, offer)
+
+        print(msg)
+        # webhook.send(msg)
 
 
 if __name__ == '__main__':
     user_args = parse_args()
-    parser_instances = [DigitecParser(), AmazonParser(), OttosParser()]
+    parser_instances = {'Digitec': DigitecParser(), 'Amazon': AmazonParser(), 'Ottos': OttosParser()}
+    parser_factory = ParserFactory(parser_instances)
 
     if parser_urls := user_args.urls_file:
         for parser_name in parser_urls:
-            parser = ParserFactory.get_parser(parser_name)
-            for url in parser_urls[parser_name]:
-                assert parser.can_process_url(url)
-                msg = handle_offer(parser, parser.get_offer(url))
-
-                print(msg)
-                # webhook.send(msg)
+            handle_offer(parser_urls[parser_name], parser=parser_factory.get_parser_with_id(parser_name))
 
     elif not user_args.parser:
-        parser_handler = ParserHandler(parser_instances)
-        for url in user_args.urls:
-            parser = parser_handler.get_parser(url)
-            msg = handle_offer(parser, parser.get_offer(url))
-
-            print(msg)
-            # webhook.send(msg)
+        handle_offer(user_args.urls, parser_factory=parser_factory)
+    else:
+        handle_offer(user_args.urls, parser=parser_factory.get_parser_with_id(user_args.parser))
 
     history.commit()

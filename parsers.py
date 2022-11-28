@@ -26,45 +26,34 @@ class Parser(ABC):
 
     def get_offer(self, url) -> Offer:
         assert self.can_process_url(url), f"{self.__str__()} can't process {url}"
+        response = requests.get(url, headers=HEADERS)
+        new_offer = Offer(link=url, product=None, price=None)
+        if response.status_code not in (200, 201):
+            return new_offer
         try:
-            response = requests.get(url, headers=HEADERS)
-            if response.status_code not in (200, 201):
-                return Offer(link=url, product=None, price=None)
-
             soup = BeautifulSoup(response.content, features='lxml')
-            price = self.get_price(soup)
-            return Offer(link=url, product=self.get_product(soup), price=price)
-        except AttributeError or AssertionError:
-            return Offer(link=url, product=None, price=None)
+            new_offer.product, new_offer.price = self.get_product(soup), self.get_price(soup)
+            return new_offer
+        except AttributeError:
+            return new_offer
 
     def __str__(self):
         return self.__class__.__name__
 
 
-class ParserHandler:
-    parsers: list[Parser]
-
-    def __init__(self, parsers):
+class ParserFactory:
+    def __init__(self, parsers: dict[str, Parser]):
         self.parsers = parsers
 
-    def get_parser(self, url: str):
-        for parser in self.parsers:
+    def get_parser_with_url(self, url: str) -> Parser:
+        for _, parser in self.parsers.items():
             if parser.can_process_url(url):
                 return parser
         raise AttributeError(f"No parser for {url}")  # TODO: think of a better solution for this
 
-
-class ParserFactory:
-    @staticmethod
-    def get_parser(parser_id: str) -> Parser:
-        if parser_id == 'Amazon':
-            return AmazonParser()
-        elif parser_id == 'Digitec':
-            return DigitecParser()
-        elif parser_id == 'Ottos':
-            return OttosParser()
-        else:
-            raise AttributeError("Invalid parser")
+    def get_parser_with_id(self, parser_id: str) -> Parser:
+        assert parser_id in self.parsers
+        return self.parsers[parser_id]
 
 
 class DigitecParser(Parser):
