@@ -6,7 +6,7 @@ from typing import Union
 
 import history
 from offer import Offer
-from parsers import AmazonParser, DigitecParser, OttosParser, Parser, ParserFactory
+from parsers import Parser, ParserFactory
 
 
 def parse_args() -> Namespace:
@@ -85,8 +85,7 @@ def handle_offer(urls: list[str], parser: Union[Parser, None] = None, parser_fac
 
 if __name__ == '__main__':
     user_args = parse_args()
-    parser_instances = {'Digitec': DigitecParser(), 'Amazon': AmazonParser(), 'Ottos': OttosParser()}
-    parser_factory = ParserFactory(parser_instances)
+    parser_factory = ParserFactory()
 
     if parser_urls := user_args.urls_file:
         for parser_name in parser_urls:

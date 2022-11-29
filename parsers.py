@@ -42,8 +42,8 @@ class Parser(ABC):
 
 
 class ParserFactory:
-    def __init__(self, parsers: dict[str, Parser]):
-        self.parsers = parsers
+    def __init__(self):
+        self.parsers = {'Digitec': DigitecParser(), 'Amazon': AmazonParser(), 'Ottos': OttosParser()}
 
     def get_parser_with_url(self, url: str) -> Parser:
         for _, parser in self.parsers.items():
