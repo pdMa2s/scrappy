@@ -1,10 +1,12 @@
 import argparse
 import json
 from argparse import Action, Namespace
-from discord import SyncWebhook
 from typing import Union
 
+from discord import SyncWebhook
+
 import history
+from notify import Broadcaster, DiscordNotifier, StandardOutputNotifier
 from offer import Offer
 from parsers import Parser, ParserFactory
 
@@ -33,10 +35,9 @@ def parse_args() -> Namespace:
     return parsed_args
 
 
-webhook = SyncWebhook.from_url(
-    "https://discord.com/api/webhooks/1041809526220927007/"
-    "l2kSrqXnI1CP17I8DEA_s52H1Dwr_OZnP2JIZzk7dHk3BOPqdISW-GxhyY3Op0sBU97C"
-)
+DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1041809526220927007/" \
+                  "l2kSrqXnI1CP17I8DEA_s52H1Dwr_OZnP2JIZzk7dHk3BOPqdISW-GxhyY3Op0sBU97C"
+
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
                          'Chrome/41.0.2228.0 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'
@@ -61,7 +62,8 @@ def get_price_msg(parser: Parser, offer: Offer) -> str:
     return f"{parser.__str__()[:-6]}:\n\t\t{offer.product}\n\t\t- Link: {offer.link}\n\t\t- Price: {offer.price}"
 
 
-def handle_offer(urls: list[str], parser: Union[Parser, None] = None, parser_factory: Union[ParserFactory, None] = None):
+def handle_offer(urls: list[str], broadcaster: Broadcaster, parser: Union[Parser, None] = None,
+                 parser_factory: Union[ParserFactory, None] = None) -> str:
     for url in urls:
         parser = parser_factory.get_parser_with_url(url) if parser_factory else parser
         assert parser.can_process_url(url)
@@ -79,21 +81,24 @@ def handle_offer(urls: list[str], parser: Union[Parser, None] = None, parser_fac
         else:
             msg = get_failed_request_msg(parser, offer)
 
-        print(msg)
-        webhook.send(msg)
+        broadcaster.broadcast(msg)
 
 
 if __name__ == '__main__':
     user_args = parse_args()
     parser_factory = ParserFactory()
+    broadcaster = Broadcaster()
+    broadcaster.attach_all([StandardOutputNotifier(), DiscordNotifier(DISCORD_WEBHOOK)])
 
     if parser_urls := user_args.urls_file:
         for parser_name in parser_urls:
-            handle_offer(parser_urls[parser_name], parser=parser_factory.get_parser_with_id(parser_name))
-
-    elif not user_args.parser:
-        handle_offer(user_args.urls, parser_factory=parser_factory)
+            handle_offer(parser_urls[parser_name], broadcaster=broadcaster,
+                         parser=parser_factory.get_parser_with_id(parser_name))
     else:
-        handle_offer(user_args.urls, parser=parser_factory.get_parser_with_id(user_args.parser))
+        if not user_args.parser:
+            handle_offer(user_args.urls, broadcaster=broadcaster, parser_factory=parser_factory)
+        else:
+            handle_offer(user_args.urls, broadcaster=broadcaster,
+                         parser=parser_factory.get_parser_with_id(user_args.parser))
 
     history.commit()
