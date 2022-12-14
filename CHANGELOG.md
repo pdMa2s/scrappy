@@ -12,9 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
+## [0.2.0] - 2014-11-29
+### Added
+- Users can now call script and pass arguments
+- Users can pass a list of urls as parameters without respective parsers
+- Users can pass a json file of parsers and their respective urls
 
-## [0.0.1] - 2014-05-31
+## [0.1.0] - 2022-11-18
+### Added
+- Minimal solution, everything very static
+- Writing prices in standard output and on discord
 
-[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.0.0...v1.1.0
-[0.0.1]: https://github.com/olivierlacan/keep-a-changelog/releases/tag/v0.0.1
+[unreleased]: https://github.com/pdMa2s/Scrappy/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/pdMa2s/Scrappy/compare/0.1.0...0.2.0
+[0.1.0]: https://github.com/pdMa2s/Scrappy/releases/tag/0.1.0
