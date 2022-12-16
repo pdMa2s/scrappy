@@ -12,7 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
-## [0.2.0] - 2014-11-29
+## [Unreleased] - 2022-12-16
+- Flexible notification pattern
+- Asynchronous notifiers
+
+## [0.2.0] - 2022-11-29
 ### Added
 - Users can now call script and pass arguments
 - Users can pass a list of urls as parameters without respective parsers

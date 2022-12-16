@@ -63,7 +63,7 @@ def get_price_msg(parser: Parser, offer: Offer) -> str:
 
 
 def handle_offer(urls: list[str], broadcaster: Broadcaster, parser: Union[Parser, None] = None,
-                 parser_factory: Union[ParserFactory, None] = None) -> str:
+                 parser_factory: Union[ParserFactory, None] = None):
     for url in urls:
         parser = parser_factory.get_parser_with_url(url) if parser_factory else parser
         assert parser.can_process_url(url)
