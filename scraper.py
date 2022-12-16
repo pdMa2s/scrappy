@@ -81,7 +81,8 @@ def handle_offer(urls: list[str], broadcaster: Broadcaster, parser: Union[Parser
         else:
             msg = get_failed_request_msg(parser, offer)
 
-        broadcaster.broadcast(msg)
+        import asyncio
+        asyncio.run(broadcaster.broadcast(msg))
 
 
 if __name__ == '__main__':

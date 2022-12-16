@@ -4,25 +4,17 @@ from abc import ABC, abstractmethod
 from discord import SyncWebhook
 
 
-class Notifier(ABC):
+class AsynchronousNotifier(ABC):
+    async def notify_async(self, msg: str):
+        self._notify_(msg)
+
     @abstractmethod
-    def notify(self, msg: str):
+    def _notify_(self, msg: str):
         pass
-
-
-class AsynchronousNotifier(Notifier, ABC):
-    @abstractmethod
-    def notify(self, msg: str):
-        pass
-
-    async def run(self, msg: str):
-        from random import randint
-        await asyncio.sleep(randint(3, 10))
-        self.notify(msg)
 
 
 class StandardOutputNotifier(AsynchronousNotifier):
-    def notify(self, msg: str):
+    def _notify_(self, msg: str):
         print(msg)
 
 
@@ -30,19 +22,19 @@ class DiscordNotifier(AsynchronousNotifier):
     def __init__(self, channel_webhook_url: str):
         self.webhook = SyncWebhook.from_url(channel_webhook_url)
 
-    def notify(self, msg: str):
+    def _notify_(self, msg: str):
         self.webhook.send(msg)
 
 
 class Broadcaster:
-    _notifiers: list[Notifier] = []
+    _notifiers: list[AsynchronousNotifier] = []
 
-    def attach(self, notifier: Notifier):
+    def attach(self, notifier: AsynchronousNotifier):
         self._notifiers.append(notifier)
 
-    def attach_all(self, notifiers: list[Notifier]):
+    def attach_all(self, notifiers: list[AsynchronousNotifier]):
         self._notifiers.extend(notifiers)
 
-    def broadcast(self, msg):
-        for notifier in self._notifiers:
-            notifier.notify(msg)
+    async def broadcast(self, msg):
+        tasks = [asyncio.create_task(notifier.notify_async(msg)) for notifier in self._notifiers]
+        await asyncio.wait(tasks)
