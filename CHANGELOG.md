@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
-## [Unreleased] - 2022-12-16
+## [0.3.0] - 2022-12-16
 ### Added
 - Flexible notification pattern
 - Asynchronous notifiers
