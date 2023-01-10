@@ -1,14 +1,13 @@
 import argparse
+import asyncio
 import json
 from argparse import Action, Namespace
 from typing import Union
 
-from discord import SyncWebhook
-
 import history
 from notify import Broadcaster, DiscordNotifier, StandardOutputNotifier
 from offer import Offer
-from parsers import Parser, ParserFactory
+from pasers import Parser, ParserFactory
 
 
 def parse_args() -> Namespace:
@@ -64,6 +63,8 @@ def get_price_msg(parser: Parser, offer: Offer) -> str:
 
 def handle_offer(urls: list[str], broadcaster: Broadcaster, parser: Union[Parser, None] = None,
                  parser_factory: Union[ParserFactory, None] = None):
+    assert parser_factory or parser
+
     for url in urls:
         parser = parser_factory.get_parser_with_url(url) if parser_factory else parser
         assert parser.can_process_url(url)
@@ -81,7 +82,6 @@ def handle_offer(urls: list[str], broadcaster: Broadcaster, parser: Union[Parser
         else:
             msg = get_failed_request_msg(parser, offer)
 
-        import asyncio
         asyncio.run(broadcaster.broadcast(msg))
 
 
