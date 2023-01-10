@@ -3,8 +3,6 @@ import json
 from argparse import Action, Namespace
 from typing import Union
 
-from discord import SyncWebhook
-
 import history
 from notify import Broadcaster, DiscordNotifier, StandardOutputNotifier
 from offer import Offer
