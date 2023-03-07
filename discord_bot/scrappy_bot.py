@@ -13,8 +13,8 @@ async def on_ready():
 
 
 @bot.command()
-async def fetch(ctx, url):
+async def track(ctx, url: str):
 
-    await ctx.channel.send(f'You said: {url}')
+    await ctx.channel.send(f'Sure thing :)')
 
 bot.run('MTA4MjcxOTAxNzI3MTMxMjM4NQ.GqCCnA.1Q7at9Ds4TabiETtdKKLKdcbCSVHuyLTWbv6q8')

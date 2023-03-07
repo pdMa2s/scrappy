@@ -5,8 +5,8 @@ from typing import Union
 
 import history
 from notify import Broadcaster, DiscordNotifier, StandardOutputNotifier
-from offer import Offer
-from parsers import Parser, ParserFactory
+from pasers.offer import Offer
+from pasers.parsers import Parser, ParserFactory
 
 
 def parse_args() -> Namespace:
@@ -26,6 +26,7 @@ def parse_args() -> Namespace:
     exclusive_group.add_argument('-u', '--urls', action='extend', nargs='+')
     exclusive_group.add_argument('-uf', '--urls-file', action=JsonArgumentLoaderAction)
     arg_parser.add_argument('-p', '--parser', required=False, type=str)
+    arg_parser.add_argument('-b', '--bot', required=False)
 
     parsed_args = arg_parser.parse_args()
 
