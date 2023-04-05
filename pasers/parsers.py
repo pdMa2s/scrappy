@@ -3,8 +3,9 @@ import requests
 
 from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
-from offer import Offer
-from typing import List, Union
+from typing import Optional
+
+from storage import Product
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
                          'Chrome/41.0.2228.0 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'
@@ -17,25 +18,25 @@ class Parser(ABC):
         pass
 
     @abstractmethod
-    def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
+    def get_price(self, soup: BeautifulSoup) -> Optional[float]:
         pass
 
     @abstractmethod
     def can_process_url(self, url: str) -> bool:
         pass
 
-    def get_offer(self, url) -> Offer:
+    def get_product_info(self, url: str) -> Product:
         assert self.can_process_url(url), f"{self.__str__()} can't process {url}"
         response = requests.get(url, headers=HEADERS)
-        new_offer = Offer(link=url, product=None, price=None)
+        new_product = Product(url=url, name=None, current_price=None)
         if response.status_code not in (200, 201):
-            return new_offer
+            return new_product
         try:
             soup = BeautifulSoup(response.content, features='lxml')
-            new_offer.product, new_offer.price = self.get_product(soup), self.get_price(soup)
-            return new_offer
+            new_product.name, new_product.current_price = self.get_product(soup), self.get_price(soup)
+            return new_product
         except AttributeError:
-            return new_offer
+            return new_product
 
     def __str__(self):
         return self.__class__.__name__

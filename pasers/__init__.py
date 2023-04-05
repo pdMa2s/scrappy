@@ -1,1 +1,1 @@
-from .parsers import AmazonParser, DigitecParser, Offer, OttosParser, Parser, ParserFactory
+from .parsers import AmazonParser, DigitecParser, OttosParser, Parser, ParserFactory
