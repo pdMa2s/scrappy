@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
 from typing import Optional
 
-from storage import Product
+from product import Product
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
                          'Chrome/41.0.2228.0 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'
@@ -46,11 +46,11 @@ class ParserFactory:
     def __init__(self):
         self.parsers = {'Digitec': DigitecParser(), 'Amazon': AmazonParser(), 'Ottos': OttosParser()}
 
-    def get_parser_with_url(self, url: str) -> Parser:
+    def get_parser_with_url(self, url: str) -> Optional[Parser]:
         for _, parser in self.parsers.items():
             if parser.can_process_url(url):
                 return parser
-        raise AttributeError(f"No parser for {url}")  # TODO: think of a better solution for this
+        return None
 
     def get_parser_with_id(self, parser_id: str) -> Parser:
         assert parser_id in self.parsers
@@ -65,12 +65,12 @@ class DigitecParser(Parser):
         return soup.h1.strong.get_text() + soup.h1.span.get_text()
 
     @staticmethod
-    def parse_price(raw_price: str) -> Union[float, None]:
+    def parse_price(raw_price: str) -> Optional[float]:
         return float(price_pattern_digits.group(0)) if (price_pattern_digits := re.search(r"\d+\.\d+", raw_price)) else\
             float(price_pattern_w_chars.group(0).split(".")[0]) if (
                 price_pattern_w_chars := re.search(r"\d+\..", raw_price)) else None
 
-    def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
+    def get_price(self, soup: BeautifulSoup) -> Optional[float]:
         return self.parse_price(soup.find_all('strong')[0].get_text())
 
 
@@ -81,7 +81,7 @@ class AmazonParser(Parser):
     def get_product(self, soup: BeautifulSoup) -> str:
         return soup.find(id="productTitle").get_text().strip()
 
-    def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
+    def get_price(self, soup: BeautifulSoup) -> Optional[float]:
         return float(soup.find(id='corePriceDisplay_desktop_feature_div')
                      .select('.a-offscreen')[0].get_text().replace('€', '').replace(',', '.'))
 
@@ -93,5 +93,6 @@ class OttosParser(Parser):
     def get_product(self, soup: BeautifulSoup) -> str:
         return soup.find("span", attrs={"data-ui-id": "page-title-wrapper"}).get_text()
 
-    def get_price(self, soup: BeautifulSoup) -> Union[float, None]:
-        return soup.find("span", attrs={"class": "price-wrapper"}).next_element.get_text().replace("CHF", "").strip()
+    def get_price(self, soup: BeautifulSoup) -> Optional[float]:
+        return float(soup.find("span", attrs={"class": "price-wrapper"})
+                     .next_element.get_text().replace("CHF", "").strip())

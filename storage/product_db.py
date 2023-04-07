@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List
+
 from typing import Optional
 
 from product import Product
@@ -7,7 +7,7 @@ from product import Product
 
 class ProductDatabase:
     def __init__(self, db_file):
-        self.conn = sqlite3.connect(db_file)
+        self.conn = sqlite3.connect(db_file, check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS products
                                (name TEXT, url TEXT PRIMARY KEY, last_price REAL)''')
@@ -40,10 +40,15 @@ class ProductDatabase:
             name, url, last_price = result
             return Product(url=url, name=name, current_price=last_price)
 
-    def get_all_products(self) -> List[Product]:
+    def get_all_products(self) -> list[Product]:
         self.cursor.execute("SELECT * FROM products")
         results = self.cursor.fetchall()
         return [Product(url=url, name=name, current_price=last_price) for name, url, last_price in results]
+
+    def get_all_urls(self) -> list[str]:
+        self.cursor.execute("SELECT url FROM products")
+        results = self.cursor.fetchall()
+        return [url[0] for url in results]
 
     def remove_product(self, product: Product):
         self.cursor.execute("DELETE FROM products WHERE url=?", (product.url,))
