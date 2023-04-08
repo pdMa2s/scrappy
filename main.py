@@ -1,30 +1,32 @@
 import argparse
 import os
-
-from discord import Embed, Intents
-from discord.ext import commands
 from argparse import Namespace
 
+from discord import Embed, Intents
+from discord.ext import commands, tasks
+
 from pasers import ParserFactory
-from scheduler import JobScheduler
 from storage import ProductDatabase
 
 
 def parse_args() -> Namespace:
     parser = argparse.ArgumentParser(description='Scrappy Bot')
     parser.add_argument('-t', '--token', help='Discord Bot Token', default=os.environ.get('SCRAPPY_TOKEN'))
+    parser.add_argument('-c', '--channel', help='The channel to where the bot will show the product prices.'
+                                                ' If not provided it will default to the first guild\'s channel.',
+                        default=None)
     args = parser.parse_args()
     assert args.token, 'Bot token is required'
     return args
 
 
+channel = None
 intents = Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 product_db = ProductDatabase("scrappy.db")
-scheduler = JobScheduler()
 parser_factory = ParserFactory()
 
 
@@ -61,51 +63,46 @@ async def remove_product(ctx: commands.Context, url: str):
         await ctx.send(f"Product not found: {url}")
 
 
-@bot.command(name="list", help="Lists the products that are being tracked")
-async def list_product_prices(ctx: commands.Context):
+def get_product_prices() -> Embed:
     products = product_db.get_all_products()
+    embed = Embed(title='Product Prices')
     if not products:
-        await ctx.send("No products found.")
+        embed.add_field(name="No products found", value=":(")
+        return embed
     else:
-        embed = Embed(title='Product Prices')
         for product in products:
             embed.add_field(name=f"{product.name} -> {product.current_price if product.has_price() else 'NO PRICE'}",
                             value=product.url, inline=False)
-        await ctx.send(embed=embed)
+        return embed
 
 
-@bot.command(help="Schedule a time for the bot to retrieve the prices and list them")
-async def schedule(ctx: commands.Context, hour: int):
-    async def scrape_and_list():
-        scrape_all_urls()
-        products = product_db.get_all_products()
-        c = bot.get_channel(1041809388534513785)
-        await c.send("test")
-
-    scheduler.add_job(scrape_and_list, hour=hour)
-    await ctx.send(f"I'll show the prices at {hour:02d} o'clock")
+@bot.command(name="list", help="Lists the products that are being tracked")
+async def list_product_prices_command(ctx: commands.Context):
+    await ctx.send(embed=get_product_prices())
 
 
-@bot.command(help="Removes one of the scheduled prices retrievals and listing")
-async def remove_schedule(ctx: commands.Context, job_id: str):
-    if scheduler.remove_job(job_id):
-        await ctx.send(f"Removed job {job_id}")
-    else:
-        await ctx.send(f"Job {job_id} not found")
+@tasks.loop(hours=12)
+async def list_product_prices_task():
+    scrape_all_urls()
+    await channel.send(embed=get_product_prices())
 
 
-@bot.command(help="Lists all the schedules for the price retrievals")
-async def list_schedules(message: commands.Context):
-    if jobs := scheduler.list_jobs():
-        response = f"Here are the current schedules:\n"
-        response += "\n".join([f" -> {j}" for j in jobs])
-        await message.channel.send(response)
-    else:
-        await message.channel.send("You have nothing scheduled currently :(")
+@bot.command(help="Set a time interval in hours for the bot to retrieve the prices and list them")
+async def interval(ctx: commands.Context, hours: int):
+    list_product_prices_task.change_interval(hours=hours)
+    await ctx.send(f"I'll show the prices every {hours:02d} hours")
+
+
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user}')
+    global channel
+    if not channel:
+        channel = bot.guilds[0].text_channels[0]
+    list_product_prices_task.start()
+
 
 if __name__ == '__main__':
     user_args = parse_args()
-    try:
-        bot.run(user_args.token)
-    finally:
-        scheduler.shutdown()
+    channel = user_args.channel
+    bot.run(user_args.token)
