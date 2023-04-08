@@ -12,15 +12,15 @@ from storage import ProductDatabase
 def parse_args() -> Namespace:
     parser = argparse.ArgumentParser(description='Scrappy Bot')
     parser.add_argument('-t', '--token', help='Discord Bot Token', default=os.environ.get('SCRAPPY_TOKEN'))
-    parser.add_argument('-c', '--channel', help='The channel to where the bot will show the product prices.'
-                                                ' If not provided it will default to the first guild\'s channel.',
-                        default=None)
+    parser.add_argument('-c', '--channel_id', help='The channel to where the bot will show the product prices.'
+                                                   ' If not provided it will default to the first guild\'s channel.',
+                        default=None, type=int)
     args = parser.parse_args()
     assert args.token, 'Bot token is required'
     return args
 
 
-channel = None
+channel_id = None
 intents = Intents.default()
 intents.message_content = True
 
@@ -84,7 +84,7 @@ async def list_product_prices_command(ctx: commands.Context):
 @tasks.loop(hours=12)
 async def list_product_prices_task():
     scrape_all_urls()
-    await channel.send(embed=get_product_prices())
+    await bot.get_channel(channel_id).send(embed=get_product_prices())
 
 
 @bot.command(help="Set a time interval in hours for the bot to retrieve the prices and list them")
@@ -96,13 +96,13 @@ async def interval(ctx: commands.Context, hours: int):
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
-    global channel
-    if not channel:
-        channel = bot.guilds[0].text_channels[0]
+    global channel_id
+    if not channel_id:
+        channel_id = bot.guilds[0].text_channels[0].id
     list_product_prices_task.start()
 
 
 if __name__ == '__main__':
     user_args = parse_args()
-    channel = user_args.channel
+    channel_id = user_args.channel_id
     bot.run(user_args.token)

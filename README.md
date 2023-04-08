@@ -16,8 +16,8 @@ optional arguments:
 -   -t, --token TOKEN -> Discord Bot Token. 
 The `TOKEN` argument can be passed as a command line argument, or set as an environment variable `SCRAPPY_TOKEN`.
   
-- -c, --channel `CHANNEL` -> The channel to where the bot will show the product prices. 
-If not provided it will default to the first guild's channel.
+- -c, --channel CHANNEL_ID -> The `CHANNEL_ID` argument is optional and can be used to specify the channel to where
+the bot will show the product prices. If not provided it will default to the first guild's channel.
 
 ## Commands
 
@@ -39,4 +39,4 @@ mention it on an issue.**
 
 - [digitec.ch](https://www.digitec.ch/)
 - [amazon.com](https://www.amazon.com/)
-- [ottos](https://www.ottos.ch/)
+- [ottos.ch](https://www.ottos.ch/)

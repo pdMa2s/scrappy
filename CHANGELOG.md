@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
+## [0.4.1] - 2022-12-16
+### Added
+- More information on the readme
+
+### Fixed
+- Channel id parameter
+
 ## [0.4.0] - 2022-12-16
 ### Added
 - Discord bot commands to control the prices that are being tracked
@@ -36,7 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal solution, everything very static
 - Writing prices in standard output and on discord
 
-[unreleased]: https://github.com/pdMa2s/Scrappy/compare/0.4.0...HEAD
+[unreleased]: https://github.com/pdMa2s/Scrappy/compare/0.4.1...HEAD
+[0.4.1]: https://github.com/pdMa2s/Scrappy/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/pdMa2s/Scrappy/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/pdMa2s/Scrappy/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/pdMa2s/Scrappy/compare/0.1.0...0.2.0
