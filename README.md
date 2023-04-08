@@ -31,3 +31,11 @@ If not provided it will default to the first guild's channel.
 1. Clone the repository: `git clone https://github.com/pdMa2s/Scrappy.git`.
 2. Navigate to the cloned directory: `cd scrappy`.
 3. Install the required packages: `pip install -r requirements.txt`.
+
+## Supported websites
+This list will increase with time. **If you have a website that you would like to see supported, please feel free to
+mention it on an issue.**
+
+- [digitec.ch](https://www.digitec.ch/)
+- [amazon.com](https://www.amazon.com/)
+- [ottos](https://www.ottos.ch/)
