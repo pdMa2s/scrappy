@@ -27,10 +27,11 @@ If not provided it will default to the first guild's channel.
 - `!interval [hours]`: Set a time interval in hours for the bot to retrieve the prices and list them
 
 ## Installation
-
-1. Clone the repository: `git clone https://github.com/pdMa2s/Scrappy.git`.
-2. Navigate to the cloned directory: `cd scrappy`.
-3. Install the required packages: `pip install -r requirements.txt`.
+1. [Create a Bot account on Discord](https://discordpy.readthedocs.io/en/stable/discord.html)
+2. Copy the bot's token. 
+3. Clone the repository: `git clone https://github.com/pdMa2s/Scrappy.git`.
+4. Navigate to the cloned directory: `cd scrappy`.
+5. .Install the required packages: `pip install -r requirements.txt`.
 
 ## Supported websites
 This list will increase with time. **If you have a website that you would like to see supported, please feel free to
