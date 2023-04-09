@@ -40,3 +40,4 @@ mention it on an issue.**
 - [digitec.ch](https://www.digitec.ch/)
 - [amazon.com](https://www.amazon.com/)
 - [ottos.ch](https://www.ottos.ch/)
+- [decathlon.ch](https://www.decathlon.ch/) -> It should also work for other subdomains like [decathlon.pt](https://www.decathlon.pt/) 

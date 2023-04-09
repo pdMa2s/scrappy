@@ -12,14 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
-## [0.4.1] - 2022-12-16
+## [0.5.0] - 2023-04-09
+### Added
+- Decathlon parser
+
+## [0.4.1] - 2023-04-08
 ### Added
 - More information on the readme
 
 ### Fixed
 - Channel id parameter
 
-## [0.4.0] - 2022-12-16
+## [0.4.0] - 2023-04-08
 ### Added
 - Discord bot commands to control the prices that are being tracked
 - Persistent storage for the products that are being tracked
@@ -43,7 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal solution, everything very static
 - Writing prices in standard output and on discord
 
-[unreleased]: https://github.com/pdMa2s/Scrappy/compare/0.4.1...HEAD
+[unreleased]: https://github.com/pdMa2s/Scrappy/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/pdMa2s/Scrappy/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/pdMa2s/Scrappy/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/pdMa2s/Scrappy/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/pdMa2s/Scrappy/compare/0.2.0...0.3.0

@@ -10,7 +10,7 @@ class ProductDatabase:
         self.conn = sqlite3.connect(db_file, check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS products
-                               (name TEXT, url TEXT PRIMARY KEY, last_price REAL)''')
+                               (name TEXT, url TEXT PRIMARY KEY, last_price TEXT)''')
 
     def add_product(self, product: Product):
         try:
@@ -23,7 +23,7 @@ class ProductDatabase:
                                                                                          product.url))
         self.conn.commit()
 
-    def get_price(self, url: str) -> Optional[float]:
+    def get_price(self, url: str) -> Optional[str]:
         self.cursor.execute("SELECT last_price FROM products WHERE url=?", (url,))
         result = self.cursor.fetchone()
         if result is None:

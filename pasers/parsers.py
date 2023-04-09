@@ -18,7 +18,7 @@ class Parser(ABC):
         pass
 
     @abstractmethod
-    def get_price(self, soup: BeautifulSoup) -> Optional[float]:
+    def get_price(self, soup: BeautifulSoup) -> Optional[str]:
         pass
 
     @abstractmethod
@@ -33,7 +33,8 @@ class Parser(ABC):
             return new_product
         try:
             soup = BeautifulSoup(response.content, features='lxml')
-            new_product.name, new_product.current_price = self.get_product(soup), self.get_price(soup)
+            new_product.name = self.get_product(soup)
+            new_product.current_price = self.get_price(soup)
             return new_product
         except AttributeError:
             return new_product
@@ -44,7 +45,12 @@ class Parser(ABC):
 
 class ParserFactory:
     def __init__(self):
-        self.parsers = {'Digitec': DigitecParser(), 'Amazon': AmazonParser(), 'Ottos': OttosParser()}
+        self.parsers = {
+            'Digitec': DigitecParser(),
+            'Amazon': AmazonParser(),
+            'Ottos': OttosParser(),
+            'Decathlon': DecathlonParser()
+        }
 
     def get_parser_with_url(self, url: str) -> Optional[Parser]:
         for _, parser in self.parsers.items():
@@ -65,9 +71,9 @@ class DigitecParser(Parser):
         return soup.h1.strong.get_text() + soup.h1.span.get_text()
 
     @staticmethod
-    def parse_price(raw_price: str) -> Optional[float]:
-        return float(price_pattern_digits.group(0)) if (price_pattern_digits := re.search(r"\d+\.\d+", raw_price)) else\
-            float(price_pattern_w_chars.group(0).split(".")[0]) if (
+    def parse_price(raw_price: str) -> Optional[str]:
+        return price_pattern_digits.group(0) if (price_pattern_digits := re.search(r"\d+\.\d+", raw_price)) else\
+            price_pattern_w_chars.group(0).split(".")[0] if (
                 price_pattern_w_chars := re.search(r"\d+\..", raw_price)) else None
 
     def get_price(self, soup: BeautifulSoup) -> Optional[float]:
@@ -81,9 +87,9 @@ class AmazonParser(Parser):
     def get_product(self, soup: BeautifulSoup) -> str:
         return soup.find(id="productTitle").get_text().strip()
 
-    def get_price(self, soup: BeautifulSoup) -> Optional[float]:
-        return float(soup.find(id='corePriceDisplay_desktop_feature_div')
-                     .select('.a-offscreen')[0].get_text().replace('€', '').replace(',', '.'))
+    def get_price(self, soup: BeautifulSoup) -> Optional[str]:
+        return soup.find(id='corePriceDisplay_desktop_feature_div').\
+            select('.a-offscreen')[0].get_text().replace(',', '.')
 
 
 class OttosParser(Parser):
@@ -93,6 +99,24 @@ class OttosParser(Parser):
     def get_product(self, soup: BeautifulSoup) -> str:
         return soup.find("span", attrs={"data-ui-id": "page-title-wrapper"}).get_text()
 
-    def get_price(self, soup: BeautifulSoup) -> Optional[float]:
-        return float(soup.find("span", attrs={"class": "price-wrapper"})
-                     .next_element.get_text().replace("CHF", "").strip())
+    def get_price(self, soup: BeautifulSoup) -> Optional[str]:
+        return soup.find("span", attrs={"class": "price-wrapper"}).\
+            next_element.get_text().strip()
+
+
+class DecathlonParser(Parser):
+    def can_process_url(self, url: str) -> bool:
+        return re.search(r"https?://www\.decathlon.+", url) is not None
+
+    def get_product(self, soup: BeautifulSoup) -> str:
+        return soup.find('h1', class_=lambda cls: cls.startswith('vtmn-typo_title')).get_text()
+
+    def get_price(self, soup: BeautifulSoup) -> Optional[str]:
+        return soup.find('div', class_="prc__active-price").get_text().strip()
+
+
+if __name__ == '__main__':
+    url = "https://www.decathlon.ch/de/p/kniebandage-prevent-500-stutzeffekt-links-rechts-damen-herren/_/R-p-309561?mc=8573255"
+    parser = ParserFactory().get_parser_with_url(url)
+    product = parser.get_product_info(url)
+    print(product)
