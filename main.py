@@ -34,7 +34,8 @@ def scrape_url(url: str):
     parser = parser_factory.get_parser_with_url(url)
     assert parser and parser.can_process_url(url)
     product = parser.get_product_info(url)
-    product_db.update_price(product)
+    if product.has_price():
+        product_db.update_price(product)
     return product
 
 

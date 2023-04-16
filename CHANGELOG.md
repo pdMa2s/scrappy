@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
+## [Unreleased] - 2023-04-16
+### Fixed
+- Deal with None on price updates when no price is retrieved
+
 ## [0.5.0] - 2023-04-09
 ### Added
 - Decathlon parser
