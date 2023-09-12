@@ -52,6 +52,7 @@ async def add_product(ctx: commands.Context, url: str):
         await ctx.send(f"Added product: {url}")
     except Exception as e:
         await ctx.send(f"Could not add product: {url}\n{e}")
+        raise e
 
 
 @bot.command(name="remove", help="Removes a product from the list of tracked products")
