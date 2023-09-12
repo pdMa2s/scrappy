@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
-## [Unreleased] - 2023-04-16
+## [0.6.0] - 2023-09-12
+### Added
+- Ochsner Sport Parser 
+
 ### Fixed
 - Deal with None on price updates when no price is retrieved
 
@@ -52,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Writing prices in standard output and on discord
 
 [unreleased]: https://github.com/pdMa2s/Scrappy/compare/0.5.0...HEAD
+[0.6.0]: https://github.com/pdMa2s/Scrappy/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/pdMa2s/Scrappy/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/pdMa2s/Scrappy/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/pdMa2s/Scrappy/compare/0.3.0...0.4.0

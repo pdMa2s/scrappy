@@ -49,7 +49,8 @@ class ParserFactory:
             'Digitec': DigitecParser(),
             'Amazon': AmazonParser(),
             'Ottos': OttosParser(),
-            'Decathlon': DecathlonParser()
+            'Decathlon': DecathlonParser(),
+            'OchsnerSport': OchsnerSportParser()
         }
 
     def get_parser_with_url(self, url: str) -> Optional[Parser]:
@@ -115,8 +116,20 @@ class DecathlonParser(Parser):
         return soup.find('div', class_="prc__active-price").get_text().strip()
 
 
+class OchsnerSportParser(Parser):
+    def can_process_url(self, url: str) -> bool:
+        return re.search(r"https?://www\.ochsnersport.ch.+", url) is not None
+
+    def get_product(self, soup: BeautifulSoup) -> str:
+        return soup.find('h1', attrs={"data-name": "product-title"}).get_text()
+
+    def get_price(self, soup: BeautifulSoup) -> Optional[str]:
+        return soup.find('div', attrs={"data-name": "price"}).get_text().strip().replace("CHF", "")
+
+
+
 if __name__ == '__main__':
-    url = "https://www.decathlon.ch/de/p/kniebandage-prevent-500-stutzeffekt-links-rechts-damen-herren/_/R-p-309561?mc=8573255"
+    url = "https://www.ochsnersport.ch/de/shop/nitro-club-dual-boa-herren-snowboardschuh-schwarz-00002002153880-p.html"
     parser = ParserFactory().get_parser_with_url(url)
     product = parser.get_product_info(url)
     print(product)
