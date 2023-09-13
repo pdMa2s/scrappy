@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
-## [0.6.1] - 2023-09-13
+## [0.6.2] - 2023-09-13
 ### Fixed
 - lxml parser error on raspberry, dropping lxml dependency
 
