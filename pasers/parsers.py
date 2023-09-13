@@ -32,7 +32,7 @@ class Parser(ABC):
         if response.status_code not in (200, 201):
             return new_product
         try:
-            soup = BeautifulSoup(response.content, features='lxml')
+            soup = BeautifulSoup(response.content, features='html.parser')
             new_product.name = self.get_product(soup)
             new_product.current_price = self.get_price(soup)
             return new_product

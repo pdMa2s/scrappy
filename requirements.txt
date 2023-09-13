@@ -3,5 +3,4 @@ beautifulsoup4==4.11.1
 bs4==0.0.1
 discord.py
 requests==2.28.1
-lxml
 pytz~=2023.3
