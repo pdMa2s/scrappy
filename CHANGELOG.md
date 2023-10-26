@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Removed
 
+## [0.6.3] - 2023-10-26
+### Fixed
+- Getting around 403 due to reuqests signature, replacing requests with cloudscraper 
+
 ## [0.6.2] - 2023-09-13
 ### Fixed
 - lxml parser error on raspberry, dropping lxml dependency
