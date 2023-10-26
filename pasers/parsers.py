@@ -1,5 +1,5 @@
 import re
-import requests
+import cloudscraper
 
 from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
@@ -7,9 +7,10 @@ from typing import Optional
 
 from product import Product
 
-HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
-                         'Chrome/41.0.2228.0 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'
-           }
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'
+                  ' Chrome/109.0.0.0 Safari/537.36',
+}
 
 
 class Parser(ABC):
@@ -27,7 +28,10 @@ class Parser(ABC):
 
     def get_product_info(self, url: str) -> Product:
         assert self.can_process_url(url), f"{self.__str__()} can't process {url}"
-        response = requests.get(url, headers=HEADERS)
+        #response = requests.get(url, headers=HEADERS)
+        scraper = cloudscraper.create_scraper()
+        response = scraper.get(url)
+
         new_product = Product(url=url, name=None, current_price=None)
         if response.status_code not in (200, 201):
             return new_product
@@ -129,7 +133,7 @@ class OchsnerSportParser(Parser):
 
 
 if __name__ == '__main__':
-    url = "https://www.ochsnersport.ch/de/shop/nitro-club-dual-boa-herren-snowboardschuh-schwarz-00002002153880-p.html"
+    url = "https://www.digitec.ch/de/s1/product/google-pixel-stand-2-generation-23-w-wireless-charger-31386046"
     parser = ParserFactory().get_parser_with_url(url)
     product = parser.get_product_info(url)
     print(product)
