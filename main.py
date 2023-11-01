@@ -70,12 +70,23 @@ def get_product_prices() -> Embed:
     embed = Embed(title='Product Prices')
     if not products:
         embed.add_field(name="No products found", value=":(")
-        return embed
     else:
+        table = "Product | Last Price | Min Price | Min Price Date | Max Price | Max Price Date\n"
+        table += "-------- | ---------- | --------- | --------------- | --------- | ---------------\n"
+
         for product in products:
-            embed.add_field(name=f"{product.name} -> {product.current_price if product.has_price() else 'NO PRICE'}",
-                            value=product.url, inline=False)
-        return embed
+            product_name = product.name
+            last_price = product.current_price if product.has_price() else 'NO PRICE'
+            min_price = product.min_price
+            min_price_date = product.min_price_date if product.min_price_date else 'N/A'
+            max_price = product.max_price
+            max_price_date = product.max_price_date if product.max_price_date else 'N/A'
+
+            table += f"{product_name} | {last_price} | {min_price} | {min_price_date} | {max_price} | {max_price_date}\n"
+
+        embed.add_field(name="Product Prices", value=f"```\n{table}```", inline=False)
+
+    return embed
 
 
 @bot.command(name="list", help="Lists the products that are being tracked")
