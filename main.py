@@ -29,6 +29,8 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 product_db = ProductDatabase("scrappy.db")
 parser_factory = ParserFactory()
 
+SPACER = "------------------------------------------------------------------\n"
+
 
 def scrape_url(url: str):
     parser = parser_factory.get_parser_with_url(url)
@@ -36,6 +38,8 @@ def scrape_url(url: str):
     product = parser.get_product_info(url)
     if product.has_price():
         product_db.update_price(product)
+    if product.name:
+        product_db.update_name(product)
     return product
 
 
@@ -67,24 +71,20 @@ async def remove_product(ctx: commands.Context, url: str):
 
 def get_product_prices() -> Embed:
     products = product_db.get_all_products()
-    embed = Embed(title='Product Prices')
+    embed = Embed(title='Prices')
     if not products:
         embed.add_field(name="No products found", value=":(")
     else:
-        table = "Product | Last Price | Min Price | Min Price Date | Max Price | Max Price Date\n"
-        table += "-------- | ---------- | --------- | --------------- | --------- | ---------------\n"
-
+        description_str = ""
         for product in products:
-            product_name = product.name
-            last_price = product.current_price if product.has_price() else 'NO PRICE'
-            min_price = product.min_price
-            min_price_date = product.min_price_date if product.min_price_date else 'N/A'
-            max_price = product.max_price
-            max_price_date = product.max_price_date if product.max_price_date else 'N/A'
+            description_str = f"Product: {product.name}\n" \
+                    f"Current Price: {product.last_price if product.has_price() else 'NO PRICE'}\n" \
+                    f"Min Price: {product.min_price}\n" \
+                    f"Min Price Date: {product.min_price_date if product.min_price_date else 'N/A'}\n" \
+                    f"Max Price: {product.max_price}\n" \
+                    f"Max Price Date: {product.max_price_date if product.max_price_date else 'N/A'}\n" \
 
-            table += f"{product_name} | {last_price} | {min_price} | {min_price_date} | {max_price} | {max_price_date}\n"
-
-        embed.add_field(name="Product Prices", value=f"```\n{table}```", inline=False)
+            embed.add_field(name=description_str, value=f"{product.url}\n{SPACER}", inline=False)
 
     return embed
 

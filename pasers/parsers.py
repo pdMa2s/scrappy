@@ -32,7 +32,7 @@ class Parser(ABC):
         scraper = cloudscraper.create_scraper()
         response = scraper.get(url)
 
-        new_product = Product(url=url, name=None, current_price=None)
+        new_product = Product(url=url, name=None, last_price=None)
         if response.status_code not in (200, 201):
             return new_product
         try:

@@ -27,21 +27,21 @@ class ProductDatabase:
             self.cursor.execute("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?)", (
                 product.name,
                 product.url,
-                product.current_price,
-                product.current_price,
-                None,
-                product.current_price,
-                None
+                product.last_price,
+                product.last_price,
+                datetime.now().strftime('%Y-%m-%d %H:%M'),
+                product.last_price,
+                datetime.now().strftime('%Y-%m-%d %H:%M')
             ))
         except sqlite3.IntegrityError:
             self.cursor.execute("UPDATE products SET name=?, last_price=?, min_price=?, min_price_date=?,"
                                 "  max_price=?, max_price_date=?  WHERE url=?", (
                                     product.name,
-                                    product.current_price,
-                                    product.current_price,
-                                    None,
-                                    product.current_price,
-                                    None,
+                                    product.last_price,
+                                    product.last_price,
+                                    datetime.now().strftime('%Y-%m-%d %H:%M'),
+                                    product.last_price,
+                                    datetime.now().strftime('%Y-%m-%d %H:%M'),
                                     product.url
                                 ))
         self.conn.commit()
@@ -72,7 +72,9 @@ class ProductDatabase:
     def get_all_products(self) -> list[Product]:
         self.cursor.execute("SELECT * FROM products")
         results = self.cursor.fetchall()
-        return [Product(url=url, name=name, current_price=last_price) for name, url, last_price in results]
+        return [Product(url=url, name=name, last_price=last_price, min_price=min_price, max_price=max_price,
+                        max_price_date=max_price_date)
+                for name, url, last_price, min_price, min_price_date, max_price, max_price_date in results]
 
     def get_all_urls(self) -> list[str]:
         self.cursor.execute("SELECT url FROM products")
@@ -86,7 +88,6 @@ class ProductDatabase:
     def update_price(self, product: Product):
         assert product.has_price()
         product = self.get_product(product.url)
-        assert product
         self.cursor.execute("UPDATE products SET last_price=?, min_price=?, min_price_date=?, max_price=?,"
                             " max_price_date=? WHERE url = ?",
                             (product.last_price,
@@ -97,6 +98,17 @@ class ProductDatabase:
                              datetime.now().strftime('%Y-%m-%d %H:%M')
                                 if product.last_price > product.max_price else product.max_price_date,
                              product.url))
+        self.conn.commit()
+
+    def update_name(self, product: Product):
+        """
+        Update the name of a product.
+
+        Parameters:
+        - product (Product): The Product object representing the product to be updated.
+        - new_name (str): The new name to be assigned to the product.
+        """
+        self.cursor.execute("UPDATE products SET name=? WHERE url=?", (product.name, product.url))
         self.conn.commit()
 
     def __del__(self):

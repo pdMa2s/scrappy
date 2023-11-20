@@ -7,7 +7,6 @@ from typing import Optional
 class Product:
     url: str
     name: Optional[str] = None
-    current_price: Optional[str] = None
     last_price: Optional[str] = None
     min_price: Optional[str] = None
     min_price_date: Optional[datetime] = None
@@ -15,4 +14,7 @@ class Product:
     max_price_date: Optional[datetime] = None
 
     def has_price(self) -> bool:
-        return self.current_price is not None
+        return self.last_price is not None
+
+    def has_name(self) -> bool:
+        return self.name is not None
