@@ -38,7 +38,7 @@ def scrape_url(url: str):
     product = parser.get_product_info(url)
     if product.has_price():
         product_db.update_price(product)
-    if product.name:
+    if product.has_name():
         product_db.update_name(product)
     return product
 
@@ -73,16 +73,15 @@ def get_product_prices() -> Embed:
     products = product_db.get_all_products()
     embed = Embed(title='Prices')
     if not products:
-        embed.add_field(name="No products found", value=":(")
+        embed.add_field(name="No products", value=":(")
     else:
-        description_str = ""
         for product in products:
             description_str = f"Product: {product.name}\n" \
                     f"Current Price: {product.last_price if product.has_price() else 'NO PRICE'}\n" \
-                    f"Min Price: {product.min_price}\n" \
+                    f"Min Price: {product.min_price if product.min_price else 'N/A'}\n" \
                     f"Min Price Date: {product.min_price_date if product.min_price_date else 'N/A'}\n" \
-                    f"Max Price: {product.max_price}\n" \
-                    f"Max Price Date: {product.max_price_date if product.max_price_date else 'N/A'}\n" \
+                    f"Max Price: {product.max_price if product.max_price else 'N/A'}\n" \
+                    f"Max Price Date: {product.max_price_date if product.max_price_date else 'N/A'}\n"
 
             embed.add_field(name=description_str, value=f"{product.url}\n{SPACER}", inline=False)
 
@@ -91,6 +90,7 @@ def get_product_prices() -> Embed:
 
 @bot.command(name="list", help="Lists the products that are being tracked")
 async def list_product_prices_command(ctx: commands.Context):
+    scrape_all_urls()
     await ctx.send(embed=get_product_prices())
 
 

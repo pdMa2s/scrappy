@@ -87,16 +87,25 @@ class ProductDatabase:
 
     def update_price(self, product: Product):
         assert product.has_price()
-        product = self.get_product(product.url)
+        min_price = product.last_price \
+            if (product.last_price and product.min_price) and product.last_price < product.min_price \
+            else product.min_price
+        min_price_date = datetime.now().strftime('%Y-%m-%d %H:%M') \
+            if (product.last_price and product.min_price) and product.last_price < product.min_price \
+            else product.min_price_date
+        max_price = product.last_price \
+            if (product.last_price and product.max_price) and product.last_price > product.max_price \
+            else product.max_price
+        max_price_date = datetime.now().strftime('%Y-%m-%d %H:%M') \
+            if (product.last_price and product.max_price) and product.last_price > product.max_price \
+            else product.max_price_date
         self.cursor.execute("UPDATE products SET last_price=?, min_price=?, min_price_date=?, max_price=?,"
                             " max_price_date=? WHERE url = ?",
                             (product.last_price,
-                             product.last_price if product.last_price < product.min_price else product.min_price,
-                             datetime.now().strftime('%Y-%m-%d %H:%M')
-                                if product.last_price < product.min_price else product.min_price_date,
-                             product.last_price if product.last_price > product.max_price else product.max_price,
-                             datetime.now().strftime('%Y-%m-%d %H:%M')
-                                if product.last_price > product.max_price else product.max_price_date,
+                             min_price,
+                             min_price_date,
+                             max_price,
+                             max_price_date,
                              product.url))
         self.conn.commit()
 

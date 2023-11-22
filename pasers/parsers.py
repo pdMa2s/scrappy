@@ -38,7 +38,7 @@ class Parser(ABC):
         try:
             soup = BeautifulSoup(response.content, features='html.parser')
             new_product.name = self.get_product(soup)
-            new_product.current_price = self.get_price(soup)
+            new_product.last_price = self.get_price(soup)
             return new_product
         except AttributeError:
             return new_product
